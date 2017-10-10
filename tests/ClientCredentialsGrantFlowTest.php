@@ -8,9 +8,9 @@ use Cidaas\OAuth2\Token\AccessToken;
 
 
 $provider = new Cidaas([
-    'baseUrl'                 => 'https://demo.cidaas.de',
-    'clientId'                => '2d3787d100b74995b11347435644ea46',    // The client ID assigned to you by the provider
-    'clientSecret'            => '702559285646441222',   // The client password assigned to you by the provider
+    'baseUrl'                 => 'yourcidaasbaseurl',
+    'clientId'                => 'xxxx',    // The client ID assigned to you by the provider
+    'clientSecret'            => 'yyyy',   // The client password assigned to you by the provider
 ]);
 
 
