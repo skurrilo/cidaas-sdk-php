@@ -8,11 +8,10 @@ use Cidaas\OAuth2\Token\AccessToken;
 
 
 $provider = new Cidaas([
-    'baseUrl'                 => 'https://apis-cidaas.test.carbookplus.com',
-    'clientId'                => '58b03a8f2f6e4bbc84f9160e122338fc',    // The client ID assigned to you by the provider
-    'clientSecret'            => '4017295703147628411',   // The client password assigned to you by the provider
+    'baseUrl'                 => 'https://demo.cidaas.de',
+    'clientId'                => '2d3787d100b74995b11347435644ea46',    // The client ID assigned to you by the provider
+    'clientSecret'            => '702559285646441222',   // The client password assigned to you by the provider
 ]);
-
 
 
 $accessToken = $provider->getAccessToken('client_credentials');
@@ -32,6 +31,6 @@ if($tokenValid){
 print_r("\n");
 
 
-$userinfo = $provider->getUserInfoById($accessToken2,"da81b6a0-7e47-4984-9dc6-d706e75143fd");
+$userinfo = $provider->getUserInfoById($accessToken2,"ff8829d5-7bc6-4158-9757-20077ecc627f");
 print_r($userinfo);
 print_r("\n");
