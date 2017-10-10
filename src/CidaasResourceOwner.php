@@ -1,8 +1,16 @@
 <?php
-namespace Cidaas\OAuth2\Client\Provider;
+/**
+ * Created by PhpStorm.
+ * User: vimalprakash
+ * Date: 09/10/17
+ * Time: 12:12 AM
+ */
 
-use League\OAuth2\Client\Provider\ResourceOwnerInterface;
-use League\OAuth2\Client\Tool\ArrayAccessorTrait;
+namespace Cidaas\OAuth2;
+
+
+
+use Cidaas\OAuth2\Helpers\ArrayAccessorTrait;
 
 class CidaasResourceOwner implements ResourceOwnerInterface
 {

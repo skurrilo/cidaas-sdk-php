@@ -2,16 +2,15 @@
 
 require_once __DIR__ . '/../vendor/autoload.php';
 
-use Cidaas\OAuth2\Client\Provider\Cidaas;
-use \League\OAuth2\Client\Token\AccessToken;
-
+use Cidaas\OAuth2\Cidaas;
+use Cidaas\OAuth2\Token\AccessToken;
 
 
 
 $provider = new Cidaas([
-    'baseUrl'                 => 'yourcidaasbaseurl',
-    'clientId'                => 'xxxx',    // The client ID assigned to you by the provider
-    'clientSecret'            => 'yyyy',   // The client password assigned to you by the provider
+    'baseUrl'                 => 'https://apis-cidaas.test.carbookplus.com',
+    'clientId'                => '58b03a8f2f6e4bbc84f9160e122338fc',    // The client ID assigned to you by the provider
+    'clientSecret'            => '4017295703147628411',   // The client password assigned to you by the provider
 ]);
 
 
@@ -26,13 +25,13 @@ $accessToken2 = new AccessToken(["access_token" => $accessToken->getToken()]);
 
 $tokenValid = $provider->validateToken($accessToken2->getToken());
 if($tokenValid){
-    print_r("Valid access token");
+    print_r("valid token");
 }else{
-    print_r("Invalid access token");
+    print_r("not valid token");
 }
 print_r("\n");
 
 
-$userinfo = $provider->getUserInfoById($accessToken2,"youruserid");
+$userinfo = $provider->getUserInfoById($accessToken2,"da81b6a0-7e47-4984-9dc6-d706e75143fd");
 print_r($userinfo);
 print_r("\n");

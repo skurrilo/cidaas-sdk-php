@@ -1,8 +1,15 @@
 <?php
-namespace Cidaas\OAuth2\Client\Provider\Exception;
+/**
+ * Created by PhpStorm.
+ * User: vimalprakash
+ * Date: 09/10/17
+ * Time: 12:19 AM
+ */
 
-use League\OAuth2\Client\Provider\Exception\IdentityProviderException;
-use Psr\Http\Message\ResponseInterface;
+namespace Cidaas\OAuth2;
+
+
+use GuzzleHttp\Message\ResponseInterface;
 
 class CidaasIdentityProviderException extends IdentityProviderException
 {
