@@ -10,38 +10,29 @@ composer require "cidaas/oauth2-cidaas:dev-php5.4.0"
 
 ## Usage
 
-Usage is the same as The League's OAuth client, using `Cidaas\OAuth2\Client\Provider\Cidaas` as the provider.
-
-
 ### Implicit Flow
 
 ```php
 
 <?php
-
 require_once __DIR__ . '/../vendor/autoload.php';
 
-use Cidaas\OAuth2\Client\Provider\Cidaas;
-use \League\OAuth2\Client\Token\AccessToken;
-
-
+use Cidaas\OAuth2\Cidaas;
+use Cidaas\OAuth2\Token\AccessToken;
 
 $provider = new Cidaas([
     'baseUrl'                 => 'yourcidaasbaseurl',
     'clientId'                => 'xxxx',    // The client ID assigned to you by the provider
     'clientSecret'            => 'yyyy',   // The client password assigned to you by the provider
-    'redirectUri'             => 'https://yourredirecturl'
+    'redirectUri'             => 'https://yourdomain/user-ui/html/welcome.html'
 ]);
-
 
 print_r($provider->getAuthorizationUrl(["response_type"=>'token']));
 print_r("\n");
 
-
 echo "Copy Paste the above URL in the browser and login and Enter the Access Token : ";
 $handle = fopen ("php://stdin","r");
 $line = fgets($handle);
-
 
 $accessToken2 = new AccessToken(["access_token" => trim($line)]);
 $resourceOwner = $provider->getResourceOwner($accessToken2);
@@ -60,8 +51,9 @@ print_r($resourceOwner);
 
 require_once __DIR__ . '/../vendor/autoload.php';
 
-use Cidaas\OAuth2\Client\Provider\Cidaas;
 
+use Cidaas\OAuth2\Cidaas;
+use Cidaas\OAuth2\Token\AccessToken;
 
 
 
@@ -69,7 +61,7 @@ $provider = new Cidaas([
     'baseUrl'                 => 'yourcidaasbaseurl',
     'clientId'                => 'xxxx',    // The client ID assigned to you by the provider
     'clientSecret'            => 'yyyy',   // The client password assigned to you by the provider
-    'redirectUri'             => 'https://yourredirecturl'
+    'redirectUri'             => 'https://yourdomain/user-ui/html/welcome.html'
 ]);
 
 
@@ -94,13 +86,6 @@ $resourceOwner = $provider->getResourceOwner($accessToken);
 print_r($resourceOwner);
 print_r("\n");
 
-
-```
-
-### Refreshing a Token
-
-```php
-
 $refrehToken = $provider->getAccessToken('refresh_token', [
     'refresh_token' => trim($accessToken->getRefreshToken())
 ]);
@@ -117,9 +102,8 @@ print_r("\n");
 
 require_once __DIR__ . '/../vendor/autoload.php';
 
-use Cidaas\OAuth2\Client\Provider\Cidaas;
-use \League\OAuth2\Client\Token\AccessToken;
-
+use Cidaas\OAuth2\Cidaas;
+use Cidaas\OAuth2\Token\AccessToken;
 
 
 
@@ -130,7 +114,6 @@ $provider = new Cidaas([
 ]);
 
 
-
 $accessToken = $provider->getAccessToken('client_credentials');
 
 print_r($accessToken->getToken());
@@ -138,10 +121,20 @@ print_r("\n");
 
 
 $accessToken2 = new AccessToken(["access_token" => $accessToken->getToken()]);
-$resourceOwner = $provider->getResourceOwner($accessToken2);
 
-print_r($resourceOwner);
+$tokenValid = $provider->validateToken($accessToken2->getToken());
+if($tokenValid){
+    print_r("valid token");
+}else{
+    print_r("not valid token");
+}
 print_r("\n");
+
+
+$userinfo = $provider->getUserInfoById($accessToken2,"ff8829d5-7bc6-4158-9757-20077ecc627f");
+print_r($userinfo);
+print_r("\n");
+
 ```
 
 
