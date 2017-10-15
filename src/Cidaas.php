@@ -176,11 +176,16 @@ class Cidaas {
         return $this->appendQuery($base, $query);
     }
 
+    function milliseconds() {
+        $mt = explode(' ', microtime());
+        return ((int)$mt[1]) * 1000 + ((int)round($mt[0] * 1000));
+    }
+
     protected function getRandomState($length = 32)
     {
         // Converting bytes to hex will always double length. Hence, we can reduce
         // the amount of bytes by half to produce the correct length.
-        return bin2hex(random_bytes($length / 2));
+        return $this->milliseconds();
     }
 
     protected function getScopeSeparator()
