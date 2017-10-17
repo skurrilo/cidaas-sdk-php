@@ -569,24 +569,6 @@ class Cidaas {
     }
 
 
-    public function validateToken($access_token){
-        $client = $this->getHttpClient();
-
-        $result = $client->get($this->getValidateTokenUrl(),[
-            "headers"=>[
-                "Content-Type" => "application/json",
-                "access_token"=>$access_token
-            ]
-        ]);
-
-        if($result->getBody()->getContents() == "true"){
-            return true;
-        }
-
-        return false;
-    }
-
-
     public function getUserInfoById(AccessToken $token,$user_id){
         $client = $this->getHttpClient();
 
@@ -602,69 +584,81 @@ class Cidaas {
     }
 
 
-    /**
-     * @param Request $request
-     * @return mixed|null
-     */
+    public function isTokenExpired($access_token){
+        $client = $this->getHttpClient();
 
-    public function getUserInfo(Request $request){
+        $result = $client->get($this->getValidateTokenUrl(),[
+            "headers"=>[
+                "Content-Type" => "application/json",
+                "access_token"=>$access_token
+            ]
+        ]);
+
+        if($result->getBody()->getContents() == "true"){
+            return false;
+        }
+
+        return true;
+    }
+
+    public  function  validateToken($parsedInfo=[],$roles=[],$scopes=[]){
         $access_token_key = "access_token";
-        $access_token = null;
-        if( $request->headers->has($access_token_key)) {
-            $access_token = $request->headers->get($access_token_key);
-        }
-        if($access_token==null && $request->query($access_token_key) != null){
-            $access_token = $request->query($access_token_key);
-        }
-        if($access_token==null && $request->headers->has("authorization")){
-            $auth = $request->headers->get("authorization");
-            if(strtolower(substr($auth, 0, strlen("bearer"))) === "bearer"){
-                $authvals = explode(" ",$auth);
-                if(sizeof($authvals)>1){
-                    $access_token = $authvals[1];
-                }
-            }
-        }
-        $cookieRequest = false;
-        if($access_token==null && $request->cookies->get("access_token")){
-            $access_token = $request->cookies->get("access_token");
-            $cookieRequest = true;
-        }
-        if($access_token == null)
-        {
+        if(!isset($parsedInfo[$access_token_key])){
             return [
                 "error"=>"Access denied for this resource",
-                "status_code"=>401
-                ];
+                "status_code"=>401,
+                "message" => "Access token cannot be null"
+            ];
+        }
+
+        if(!isset($parsedInfo["headers"])){
+            return [
+                "error"=>"Access denied for this resource",
+                "status_code"=>401,
+                "message" => "Headers cannot be null"
+            ];
+        }
+
+        $headers = $parsedInfo["headers"];
+
+
+        $ipAddress = "";
+
+        if(isset($headers["x-forwarded-for"])){
+            $ips = explode(" ",$headers["x-forwarded-for"]);
+            if(sizeof($ips)>0){
+                $ipAddress = $ips[0];
+            }
 
         }
-        $ipAddress = "";
-        if($request->headers->has("x-forwarded-for")){
-            $ips = explode(" ",$request->headers->get("x-forwarded-for"));
-            $ipAddress = explode(",",$auth)[0];
-        }
+
+
         $host = "";
-        if($request->headers->has("X-Forwarded-Host")){
-            $host = $request->headers->get("X-Forwarded-Host");
+        if(isset($headers["X-Forwarded-Host"])){
+            $host = $headers["X-Forwarded-Host"];
         }
+
         $acceptLanguage = "";
-        if($request->headers->has("Accept-Language")){
-            $acceptLanguage = $request->headers->get("Accept-Language");
+
+        if(isset($headers["Accept-Language"])){
+            $acceptLanguage = $headers["Accept-Language"];
         }
+
         $userAgent = "";
-        if($request->headers->has("user-agent")){
-            $userAgent = $request->headers->get("user-agent");
+
+        if(isset($headers["user-agent"])){
+            $userAgent = $headers["user-agent"];
         }
+
         $referrer = "";
-        if($request->headers->has("referrer")){
-            $referrer = $request->headers->get("referrer");
+
+        if(isset($headers["referrer"])){
+            $referrer = $headers["referrer"];
         }
-        $allHeaders = [];
-        foreach ($request->headers as $key=>$value){
-            $allHeaders[$key] = $value[0];
-        }
+
+
         $dataToSend = [
-            "accessToken"=>$access_token,
+            "accessToken"=>$parsedInfo[$access_token_key],
             "userId"=>null,
             "clientId"=>null,
             "referrer"=>$referrer,
@@ -672,35 +666,43 @@ class Cidaas {
             "host"=>$host,
             "acceptLanguage"=>$acceptLanguage,
             "userAgent"=>$userAgent,
-            "requestURL"=>"",
+            "requestURL"=>isset($parsedInfo["requestURL"])?$parsedInfo["requestURL"]:"",
             "success"=>false,
             "requestedScopes"=>"",
             "requestedRoles"=>"",
             "createdTime"=>date_create('now')->format('Y-m-d\TH:i:sO'),
-            "requestInfo"=>$allHeaders
+            "requestInfo"=>$headers
         ];
-        $roles = $request->route()->getAction("roles");
+
+
+
         if($roles!=null){
             $dataToSend["requestedRoles"] =  implode(",",$roles);
         }
-        $scopes = $request->route()->getAction("scopes");
+
         if($scopes!=null){
             $dataToSend["requestedScopes"] =  implode(" ",$scopes);
         }
+
+
         $client = $this->getHttpClient();
+
         $result = $client->post($this->getTokenInfoUrl(),[
             "json"=>$dataToSend,
             "headers"=>[
                 "Content-Type" => "application/json",
-                "access_token"=>$access_token
+                "access_token"=>$parsedInfo[$access_token_key]
             ]
         ]);
+
         if($result->getStatusCode() == 200) {
             $token_check_response = json_decode($result->getBody()->getContents());
+
             return [
                 "data"=>$token_check_response,
                 "status_code"=>200
             ];
+
         }
 
         return [
