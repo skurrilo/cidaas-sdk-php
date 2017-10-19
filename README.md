@@ -138,9 +138,12 @@ print_r("\n");
 ```
 
 
-### Validate the Scope, Role and Get User base info
+
+## Validate Access , Roles, Scopes. 
 
 #### Parse request and get the details 
+
+Add this in your web framework side.
 
 ```php
 public function extractHeaderInfo(Request $request)
