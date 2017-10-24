@@ -301,7 +301,7 @@ class Cidaas {
 
     protected function fetchResourceOwnerDetails(AccessToken $token)
     {
-        print_r($token);
+        
         $url = $this->getResourceOwnerDetailsUrl($token);
 
         $request = $this->getAuthenticatedRequest(self::METHOD_GET, $url, $token);
@@ -320,10 +320,8 @@ class Cidaas {
             'headers' => $this->getHeaders($token),
         ];
 
-        print_r($defaults);
-
         $options = array_merge_recursive($defaults, $options);
-        print_r($options);
+        
         $factory = $this->getHttpClient();
 
         return $factory->createRequest($method, $url, $options);
@@ -398,13 +396,11 @@ class Cidaas {
      */
     protected function parseJson($content)
     {
-        print_r($content);
         $content = json_decode($content, true);
 
         if (json_last_error() !== JSON_ERROR_NONE) {
             throw new UnexpectedValueException(sprintf(
-                "Failed to parse JSON response: %s",
-                json_last_error_msg()
+                "Failed to parse JSON response: %s"
             ));
         }
 
