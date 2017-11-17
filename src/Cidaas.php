@@ -604,6 +604,7 @@ class Cidaas {
 
     public  function  validateToken($parsedInfo=[],$roles=[],$scopes=[]){
         $access_token_key = "access_token";
+
         if(!isset($parsedInfo[$access_token_key])){
             return [
                 "error"=>"Access denied for this resource",
@@ -618,6 +619,52 @@ class Cidaas {
                 "status_code"=>401,
                 "message" => "Headers cannot be null"
             ];
+        }
+
+
+        $dataToSend = $this->prepareTokenUsageEntity($parsedInfo,$roles,$scopes);
+
+        if($dataToSend == null){
+            return [
+                "error"=>"Access denied for this resource",
+                "status_code"=>401,
+                ];
+        }
+
+        $client = $this->getHttpClient();
+
+        $result = $client->post($this->getTokenInfoUrl(),[
+            "json"=>$dataToSend,
+            "headers"=>[
+                "Content-Type" => "application/json",
+                "access_token"=>$parsedInfo[$access_token_key]
+            ]
+        ]);
+
+        if($result->getStatusCode() == 200) {
+            $token_check_response = json_decode($result->getBody()->getContents());
+
+            return [
+                "data"=>$token_check_response,
+                "status_code"=>200
+            ];
+
+        }
+
+        return [
+            "error"=>"Access denied for this resource",
+            "status_code"=>401
+        ];
+    }
+
+    public  function prepareTokenUsageEntity($parsedInfo=[],$roles=[],$scopes=[]){
+        $access_token_key = "access_token";
+        if(!isset($parsedInfo[$access_token_key])){
+            return null;
+        }
+
+        if(!isset($parsedInfo["headers"])){
+            return null;
         }
 
         $headers = $parsedInfo["headers"];
@@ -684,40 +731,15 @@ class Cidaas {
         if($scopes!=null){
             $dataToSend["requestedScopes"] =  implode(" ",$scopes);
         }
-
-
-        $client = $this->getHttpClient();
-
-        $result = $client->post($this->getTokenInfoUrl(),[
-            "json"=>$dataToSend,
-            "headers"=>[
-                "Content-Type" => "application/json",
-                "access_token"=>$parsedInfo[$access_token_key]
-            ]
-        ]);
-
-        if($result->getStatusCode() == 200) {
-            $token_check_response = json_decode($result->getBody()->getContents());
-
-            return [
-                "data"=>$token_check_response,
-                "status_code"=>200
-            ];
-
-        }
-
-        return [
-            "error"=>"Access denied for this resource",
-            "status_code"=>401
-        ];
+        return $dataToSend;
     }
 
-    public  function  updateTokenUsage($tokenList=[]){
+    public  function  updateTokenUsage($preparedTokenList=[]){
 
         $client = $this->getHttpClient();
 
         $result = $client->post($this->getUpdateTokenUsageUrl(),[
-            "json"=>$tokenList,
+            "json"=>$preparedTokenList,
             "headers"=>[
                 "Content-Type" => "application/json"
             ]
