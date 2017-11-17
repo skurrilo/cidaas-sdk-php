@@ -109,6 +109,11 @@ class Cidaas {
         return $this->domain() . '/token/userinfobytoken';
     }
 
+    public function getUpdateTokenUsageUrl()
+    {
+        return $this->domain() . '/token/updateusage';
+    }
+
     public function getDefaultScopes()
     {
         return ['openid','profile', 'email'];
@@ -696,6 +701,31 @@ class Cidaas {
 
             return [
                 "data"=>$token_check_response,
+                "status_code"=>200
+            ];
+
+        }
+
+        return [
+            "error"=>"Access denied for this resource",
+            "status_code"=>401
+        ];
+    }
+
+    public  function  updateTokenUsage($tokenList=[]){
+
+        $client = $this->getHttpClient();
+
+        $result = $client->post($this->getUpdateTokenUsageUrl(),[
+            "json"=>$tokenList,
+            "headers"=>[
+                "Content-Type" => "application/json"
+            ]
+        ]);
+
+        if($result->getStatusCode() == 200) {
+
+            return [
                 "status_code"=>200
             ];
 
