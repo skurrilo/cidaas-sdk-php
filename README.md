@@ -207,7 +207,7 @@ $provider = new Cidaas([
     'redirectUri'             => 'https://yourdomain/user-ui/html/welcome.html'
 ]);
 
-$response = $provider->validateToken($ff,["ADMIN","MANAGER"],["products:read","products:write"]);
+$response = $provider->validateToken($parsedData,["ADMIN","MANAGER"],["products:read","products:write"]);
 
 if($response->status_code == 200){
     $userInfo = $response->data;
