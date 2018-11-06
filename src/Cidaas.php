@@ -1,19 +1,19 @@
 <?php
 
-namespace  Cidaas\OAuth2;
+namespace Cidaas\OAuth2;
 
-use Cidaas\OAuth2\Helpers\AbstractGrant;
 use Cidaas\OAuth2\Helpers\ArrayAccessorTrait;
 use Cidaas\OAuth2\Helpers\QueryBuilderTrait;
 use Cidaas\OAuth2\Helpers\RequiredParameterTrait;
 use Cidaas\OAuth2\Token\AccessToken;
+use GuzzleHttp\Client;
 use GuzzleHttp\Exception\BadResponseException;
 use GuzzleHttp\Message\RequestInterface;
-use GuzzleHttp\Client;
 use GuzzleHttp\Message\ResponseInterface;
 use UnexpectedValueException;
 
-class Cidaas {
+class Cidaas
+{
 
     use ArrayAccessorTrait;
     use QueryBuilderTrait;
@@ -24,40 +24,37 @@ class Cidaas {
      */
     const ACCESS_TOKEN_RESOURCE_OWNER_ID = null;
 
-            protected $baseUrl;
+    protected $baseUrl;
 
-            /**
-            * @var string HTTP method used to fetch access tokens.
-            */
-            const METHOD_GET = 'GET';
-     
-         /**
-          * @var string HTTP method used to fetch access tokens.
-          */
-         const METHOD_POST = 'POST';
-     
-         /**
-          * @var string
-          */
-         protected $clientId;
-     
-         /**
-          * @var string
-          */
-         protected $clientSecret;
-     
-         /**
-          * @var string
-          */
-         protected $redirectUri;
-     
-         /**
-          * @var string
-          */
-         protected $state;
+    /**
+     * @var string HTTP method used to fetch access tokens.
+     */
+    const METHOD_GET = 'GET';
 
+    /**
+     * @var string HTTP method used to fetch access tokens.
+     */
+    const METHOD_POST = 'POST';
 
+    /**
+     * @var string
+     */
+    protected $clientId;
 
+    /**
+     * @var string
+     */
+    protected $clientSecret;
+
+    /**
+     * @var string
+     */
+    protected $redirectUri;
+
+    /**
+     * @var string
+     */
+    protected $state;
 
     public function __construct(array $options = [], array $collaborators = [])
     {
@@ -80,28 +77,27 @@ class Cidaas {
 
     public function getBaseAuthorizationUrl()
     {
-        return $this->domain() . '/oauth2-login/oauth2/authz';
+        return $this->domain() . '/authz-srv/authz';
     }
 
     public function getManagerUserInfo()
     {
-        return $this->domain() . '/oauth2-usermanagement/oauth2/user';
+        return $this->domain() . '/users-srv/userinfo';
     }
-
 
     public function getValidateTokenUrl()
     {
-        return $this->domain() . '/oauth2-login/oauth2/checktoken';
+        return $this->domain() . '/token-srv/introspect';
     }
 
     public function getBaseAccessTokenUrl(array $params = [])
     {
-        return $this->domain() . '/oauth2-login/oauth2/token';
+        return $this->domain() . '/token-srv/token';
     }
 
     public function getResourceOwnerDetailsUrl(AccessToken $token)
     {
-        return $this->domain() . '/oauth2-usermanagement/oauth2/userinfo';
+        return $this->domain() . '/users-srv/userinfo';
     }
 
     public function getTokenInfoUrl()
@@ -116,9 +112,18 @@ class Cidaas {
 
     public function getDefaultScopes()
     {
-        return ['openid','profile', 'email'];
+        return [
+            "openid",
+            "profile",
+            "email",
+            "phone",
+            "address",
+            "offline_access",
+            "identities",
+            "roles",
+            "groups",
+        ];
     }
-
 
     /**
      * Returns the method to use when requesting an access token.
@@ -130,7 +135,6 @@ class Cidaas {
         return self::METHOD_POST;
     }
 
-
     /**
      * Builds the access token URL's query string.
      *
@@ -141,7 +145,6 @@ class Cidaas {
     {
         return $this->buildQueryString($params);
     }
-
 
     /**
      * Returns the request body for requesting an access token.
@@ -174,16 +177,33 @@ class Cidaas {
 
     public function getAuthorizationUrl(array $options = [])
     {
-        $base   = $this->getBaseAuthorizationUrl();
+        if (empty($options["scope"])) {
+            $options["scope"] = implode(" ", $this->getDefaultScopes());
+        }
+        if (!empty($options["scope"])) {
+            $scope = $options["scope"];
+            $scopes = explode(" ", $scope);
+            if (in_array("openid", $scopes)) {
+                if (empty($options["nonce"])) {
+                    $options["nonce"] = $this->getRandomState();
+                }
+            }
+        }
+        if (empty($options["state"])) {
+            $options["state"] = $this->getRandomState();
+        }
+
+        $base = $this->getBaseAuthorizationUrl();
         $params = $this->getAuthorizationParameters($options);
-        $query  = $this->getAuthorizationQuery($params);
+        $query = $this->getAuthorizationQuery($params);
 
         return $this->appendQuery($base, $query);
     }
 
-    function milliseconds() {
+    public function milliseconds()
+    {
         $mt = explode(' ', microtime());
-        return ((int)$mt[1]) * 1000 + ((int)round($mt[0] * 1000));
+        return ((int) $mt[1]) * 1000 + ((int) round($mt[0] * 1000));
     }
 
     protected function getRandomState($length = 32)
@@ -220,7 +240,8 @@ class Cidaas {
         return $url;
     }
 
-    protected function getAuthorizationParameters(array $options){
+    protected function getAuthorizationParameters(array $options)
+    {
 
         if (empty($options['state'])) {
             $options['state'] = $this->getRandomState();
@@ -235,7 +256,7 @@ class Cidaas {
         }
 
         $options += [
-            'approval_prompt' => 'auto'
+            'approval_prompt' => 'auto',
         ];
 
         if (is_array($options['scope'])) {
@@ -291,7 +312,6 @@ class Cidaas {
         return $parsed;
     }
 
-
     protected function checkResponse(ResponseInterface $response, $data)
     {
         if ($response->getStatusCode() >= 400) {
@@ -303,10 +323,9 @@ class Cidaas {
         return $response;
     }
 
-
     protected function fetchResourceOwnerDetails(AccessToken $token)
     {
-        
+
         $url = $this->getResourceOwnerDetailsUrl($token);
 
         $request = $this->getAuthenticatedRequest(self::METHOD_GET, $url, $token);
@@ -326,7 +345,7 @@ class Cidaas {
         ];
 
         $options = array_merge_recursive($defaults, $options);
-        
+
         $factory = $this->getHttpClient();
 
         return $factory->createRequest($method, $url, $options);
@@ -351,14 +370,13 @@ class Cidaas {
 
     protected function getAuthorizationHeaders($token = null)
     {
-        return ["access_token"=>$token];
+        return ["access_token" => $token];
     }
 
     protected function createResourceOwner(array $response, AccessToken $token)
     {
         return new CidaasResourceOwner($response);
     }
-
 
     protected function parseResponse(ResponseInterface $response)
     {
@@ -412,7 +430,6 @@ class Cidaas {
         return $content;
     }
 
-
     /**
      * Returns the content type header of a response.
      *
@@ -434,18 +451,17 @@ class Cidaas {
     public function getAccessToken($grant, array $options = [])
     {
 
-
         $params = [
-            'client_id'     => $this->clientId,
+            'client_id' => $this->clientId,
             'client_secret' => $this->clientSecret,
-            'redirect_uri'  => $this->redirectUri,
+            'redirect_uri' => $this->redirectUri,
         ];
 
-        $params   = $this->prepareRequestParameters($grant,$params, $options);
-        $request  = $this->getAccessTokenRequest($params);
+        $params = $this->prepareRequestParameters($grant, $params, $options);
+        $request = $this->getAccessTokenRequest($params);
         $response = $this->getParsedResponse($request);
         $prepared = $this->prepareAccessTokenResponse($response);
-        $token    = $this->createAccessToken($prepared);
+        $token = $this->createAccessToken($prepared);
 
         return $token;
     }
@@ -463,7 +479,6 @@ class Cidaas {
     {
         return new AccessToken($response);
     }
-
 
     /**
      * Returns the key used in the access token response to identify the resource owner.
@@ -533,8 +548,8 @@ class Cidaas {
      */
     protected function getAccessTokenRequest(array $params)
     {
-        $method  = $this->getAccessTokenMethod();
-        $url     = $this->getAccessTokenUrl($params);
+        $method = $this->getAccessTokenMethod();
+        $url = $this->getAccessTokenUrl($params);
         $options = $this->getAccessTokenOptions($params);
 
         return $this->getRequest($method, $url, $options);
@@ -545,9 +560,10 @@ class Cidaas {
      *
      * @return array
      */
-     protected function getRequiredRequestParameters(){
-         return [];
-     }
+    protected function getRequiredRequestParameters()
+    {
+        return [];
+    }
 
     /**
      * Prepares an access token request's parameters by checking that all
@@ -557,7 +573,7 @@ class Cidaas {
      * @param  array $options
      * @return array
      */
-    public function prepareRequestParameters($grant,array $defaults, array $options)
+    public function prepareRequestParameters($grant, array $defaults, array $options)
     {
         $defaults['grant_type'] = $grant;
 
@@ -569,195 +585,206 @@ class Cidaas {
         return $provided;
     }
 
-
-    public function getUserInfoById(AccessToken $token,$user_id){
+    public function getUserInfoById(AccessToken $token, $user_id)
+    {
         $client = $this->getHttpClient();
 
-        $result = $client->get($this->getManagerUserInfo()."/".$user_id,[
-            "headers"=>[
+        $result = $client->get($this->getManagerUserInfo() . "/" . $user_id, [
+            "headers" => [
                 "Content-Type" => "application/json",
-                "access_token"=>$token->getToken()
-            ]
+                "access_token" => $token->getToken(),
+            ],
         ]);
 
         return $this->createResourceOwner($this->parseResponse($result), $token);
 
     }
 
+    public function isTokenExpired($access_token)
+    {
+        $options = [
+            "token" => $access_token,
+            "token_type_hint" => "access_token",
+        ];
 
-    public function isTokenExpired($access_token){
+        $authHeader = "Basic " . base64_encode($this->clientId . ":" . $this->clientSecret);
+
+        if (empty($authHeader)) {
+            throw new \RuntimeException('auth must not be empty');
+        }
+        $url = $this->getValidateTokenUrl();
         $client = $this->getHttpClient();
 
-        $result = $client->get($this->getValidateTokenUrl(),[
-            "headers"=>[
-                "Content-Type" => "application/json",
-                "access_token"=>$access_token
-            ]
+        $response = $client->post($url, [
+            "headers" => [
+                "Authorization" => $authHeader,
+                'Content-Type' => 'application/json',
+            ],
+            "json" => $options,
         ]);
 
-        if($result->getBody()->getContents() == "true"){
+        $body = $response->getBody();
+        // echo $body;
+        $parsedResponse = $this->parseJson($body);
+
+        if ($parsedResponse["active"] == 1 || $parsedResponse["active"] == true || $parsedResponse["active"] == "true") {
+
             return false;
+
         }
 
         return true;
     }
 
-    public  function  validateToken($parsedInfo=[],$roles=[],$scopes=[]){
+    public function validateToken($parsedInfo = [], $roles = [], $scopes = [])
+    {
         $access_token_key = "access_token";
 
-        if(!isset($parsedInfo[$access_token_key])){
+        if (!isset($parsedInfo[$access_token_key])) {
             return [
-                "error"=>"Access denied for this resource",
-                "status_code"=>401,
-                "message" => "Access token cannot be null"
+                "error" => "Access denied for this resource",
+                "status_code" => 401,
+                "message" => "Access token cannot be null",
             ];
         }
 
-        if(!isset($parsedInfo["headers"])){
-            return [
-                "error"=>"Access denied for this resource",
-                "status_code"=>401,
-                "message" => "Headers cannot be null"
-            ];
+        $options = [
+            "token" => $parsedInfo[$access_token_key],
+            "token_type_hint" => "access_token",
+        ];
+
+        $authHeader = "Basic " . base64_encode($this->clientId . ":" . $this->clientSecret);
+
+        if (empty($authHeader)) {
+            throw new \RuntimeException('auth must not be empty');
         }
-
-
-        $dataToSend = $this->prepareTokenUsageEntity($parsedInfo,$roles,$scopes);
-
-        if($dataToSend == null){
-            return [
-                "error"=>"Access denied for this resource",
-                "status_code"=>401,
-                ];
-        }
-
+        $url = $this->getValidateTokenUrl();
         $client = $this->getHttpClient();
 
-        $result = $client->post($this->getTokenInfoUrl(),[
-            "json"=>$dataToSend,
-            "headers"=>[
-                "Content-Type" => "application/json",
-                "access_token"=>$parsedInfo[$access_token_key]
-            ]
+        $response = $client->post($url, [
+            "headers" => [
+                "Authorization" => $authHeader,
+                'Content-Type' => 'application/json',
+            ],
+            "json" => $options,
         ]);
 
-        if($result->getStatusCode() == 200) {
-            $token_check_response = json_decode($result->getBody()->getContents());
+        $body = $response->getBody();
+        // echo $body;
+        $parsedResponse = $this->parseJson($body);
+
+        if ($parsedResponse["active"] == 1 || $parsedResponse["active"] == true || $parsedResponse["active"] == "true") {
 
             return [
-                "data"=>$token_check_response,
-                "status_code"=>200
+                "data" => $parsedResponse,
+                "status_code" => 200,
             ];
 
         }
 
         return [
-            "error"=>"Access denied for this resource",
-            "status_code"=>401
+            "error" => "Access denied for this resource",
+            "status_code" => 401,
         ];
     }
 
-    public  function prepareTokenUsageEntity($parsedInfo=[],$roles=[],$scopes=[]){
+    public function prepareTokenUsageEntity($parsedInfo = [], $roles = [], $scopes = [])
+    {
         $access_token_key = "access_token";
-        if(!isset($parsedInfo[$access_token_key])){
+        if (!isset($parsedInfo[$access_token_key])) {
             return null;
         }
 
-        if(!isset($parsedInfo["headers"])){
+        if (!isset($parsedInfo["headers"])) {
             return null;
         }
 
         $headers = $parsedInfo["headers"];
 
-
         $ipAddress = "";
 
-        if(isset($headers["x-forwarded-for"])){
-            $ips = explode(" ",$headers["x-forwarded-for"]);
-            if(sizeof($ips)>0){
+        if (isset($headers["x-forwarded-for"])) {
+            $ips = explode(" ", $headers["x-forwarded-for"]);
+            if (sizeof($ips) > 0) {
                 $ipAddress = $ips[0];
             }
 
         }
 
-
         $host = "";
-        if(isset($headers["X-Forwarded-Host"])){
+        if (isset($headers["X-Forwarded-Host"])) {
             $host = $headers["X-Forwarded-Host"];
         }
 
         $acceptLanguage = "";
 
-        if(isset($headers["Accept-Language"])){
+        if (isset($headers["Accept-Language"])) {
             $acceptLanguage = $headers["Accept-Language"];
         }
 
         $userAgent = "";
 
-        if(isset($headers["user-agent"])){
+        if (isset($headers["user-agent"])) {
             $userAgent = $headers["user-agent"];
         }
 
         $referrer = "";
 
-        if(isset($headers["referrer"])){
+        if (isset($headers["referrer"])) {
             $referrer = $headers["referrer"];
         }
 
-
         $dataToSend = [
-            "accessToken"=>$parsedInfo[$access_token_key],
-            "userId"=>null,
-            "clientId"=>null,
-            "referrer"=>$referrer,
-            "ipAddress"=>$ipAddress,
-            "host"=>$host,
-            "acceptLanguage"=>$acceptLanguage,
-            "userAgent"=>$userAgent,
-            "requestURL"=>isset($parsedInfo["requestURL"])?$parsedInfo["requestURL"]:"",
-            "success"=>false,
-            "requestedScopes"=>"",
-            "requestedRoles"=>"",
-            "createdTime"=>date_create('now')->format('Y-m-d\TH:i:sO'),
-            "requestInfo"=>$headers
+            "accessToken" => $parsedInfo[$access_token_key],
+            "userId" => null,
+            "clientId" => null,
+            "referrer" => $referrer,
+            "ipAddress" => $ipAddress,
+            "host" => $host,
+            "acceptLanguage" => $acceptLanguage,
+            "userAgent" => $userAgent,
+            "requestURL" => isset($parsedInfo["requestURL"]) ? $parsedInfo["requestURL"] : "",
+            "success" => false,
+            "requestedScopes" => "",
+            "requestedRoles" => "",
+            "createdTime" => date_create('now')->format('Y-m-d\TH:i:sO'),
+            "requestInfo" => $headers,
         ];
 
-
-
-        if($roles!=null){
-            $dataToSend["requestedRoles"] =  implode(",",$roles);
+        if ($roles != null) {
+            $dataToSend["requestedRoles"] = implode(",", $roles);
         }
 
-        if($scopes!=null){
-            $dataToSend["requestedScopes"] =  implode(" ",$scopes);
+        if ($scopes != null) {
+            $dataToSend["requestedScopes"] = implode(" ", $scopes);
         }
         return $dataToSend;
     }
 
-    public  function  updateTokenUsage($preparedTokenList=[]){
+    public function updateTokenUsage($preparedTokenList = [])
+    {
 
         $client = $this->getHttpClient();
 
-        $result = $client->post($this->getUpdateTokenUsageUrl(),[
-            "json"=>$preparedTokenList,
-            "headers"=>[
-                "Content-Type" => "application/json"
-            ]
+        $result = $client->post($this->getUpdateTokenUsageUrl(), [
+            "json" => $preparedTokenList,
+            "headers" => [
+                "Content-Type" => "application/json",
+            ],
         ]);
 
-        if($result->getStatusCode() == 200) {
+        if ($result->getStatusCode() == 200) {
 
             return [
-                "status_code"=>200
+                "status_code" => 200,
             ];
 
         }
 
         return [
-            "error"=>"Access denied for this resource",
-            "status_code"=>401
+            "error" => "Access denied for this resource",
+            "status_code" => 401,
         ];
     }
 
 }
-

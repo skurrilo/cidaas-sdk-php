@@ -22,7 +22,7 @@ use Cidaas\OAuth2\Token\AccessToken;
 
 $provider = new Cidaas([
     'baseUrl'                 => 'yourcidaasbaseurl',
-    'clientId'                => 'xxxx',    // The client ID assigned to you by the provider
+    'clientId'                => 'YOUR CIDAAS CLIENT IDx',    // The client ID assigned to you by the provider
     'clientSecret'            => 'yyyy',   // The client password assigned to you by the provider
     'redirectUri'             => 'https://yourdomain/user-ui/html/welcome.html'
 ]);
@@ -59,7 +59,7 @@ use Cidaas\OAuth2\Token\AccessToken;
 
 $provider = new Cidaas([
     'baseUrl'                 => 'yourcidaasbaseurl',
-    'clientId'                => 'xxxx',    // The client ID assigned to you by the provider
+    'clientId'                => 'YOUR CIDAAS CLIENT IDx',    // The client ID assigned to you by the provider
     'clientSecret'            => 'yyyy',   // The client password assigned to you by the provider
     'redirectUri'             => 'https://yourdomain/user-ui/html/welcome.html'
 ]);
@@ -109,7 +109,7 @@ use Cidaas\OAuth2\Token\AccessToken;
 
 $provider = new Cidaas([
     'baseUrl'                 => 'yourcidaasbaseurl',
-    'clientId'                => 'xxxx',    // The client ID assigned to you by the provider
+    'clientId'                => 'YOUR CIDAAS CLIENT IDx',    // The client ID assigned to you by the provider
     'clientSecret'            => 'yyyy',   // The client password assigned to you by the provider
 ]);
 
@@ -202,7 +202,7 @@ $parsedData = $this->extractHeaderInfo($request);
 
 $provider = new Cidaas([
     'baseUrl'                 => 'yourcidaasbaseurl',
-    'clientId'                => 'xxxx',    // The client ID assigned to you by the provider
+    'clientId'                => 'YOUR CIDAAS CLIENT IDx',    // The client ID assigned to you by the provider
     'clientSecret'            => 'yyyy',   // The client password assigned to you by the provider
     'redirectUri'             => 'https://yourdomain/user-ui/html/welcome.html'
 ]);
