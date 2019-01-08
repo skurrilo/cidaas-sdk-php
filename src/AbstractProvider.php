@@ -227,16 +227,10 @@ class AbstractProvider
     {
         $url = $this->openid_config["end_session_endpoint"];
 
-        if (!isset($access_token_hint)) {
-            $access_token_hint = "";
-        }
-        if (!isset($post_logout_redirect_uri)) {
-            $post_logout_redirect_uri = "";
-        }
         $target_url = $url . "?access_token_hint=" . $access_token_hint;
 
         if (!empty($post_logout_redirect_uri)) {
-            $target_url = $url . "?post_logout_redirect_uri=" . urlencode(post_logout_redirect_uri);
+            $target_url = $target_url . "&post_logout_redirect_uri=" . urlencode($post_logout_redirect_uri);
         }
 
         return $target_url;
