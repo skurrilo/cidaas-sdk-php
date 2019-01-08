@@ -192,7 +192,7 @@ class AbstractProvider
             $options["token_type_hint"] = "access_token";
         }
 
-        $authHeader;
+        $authHeader = "";
         if (!empty($access_token)) {
             $authHeader = "Bearer " . $access_token;
         } else {
