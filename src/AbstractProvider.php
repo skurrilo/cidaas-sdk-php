@@ -143,8 +143,8 @@ class AbstractProvider
 
         $url = $this->openid_config["token_endpoint"];
 
-        $response = $client->request('POST', $url, [
-            'form_params' => $params,
+        $response = $client->post( $url, [
+            'body' => $params,
         ]);
 
         $body = $response->getBody();
@@ -167,7 +167,7 @@ class AbstractProvider
 
         $client = new Client();
 
-        $response = $client->request('POST', $url, [
+        $response = $client->post( $url, [
             "headers" => [
                 "Authorization" => "Bearer " . $access_token,
                 'Content-Type' => 'application/json',
