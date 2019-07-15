@@ -207,7 +207,7 @@ class AbstractProvider
 
         $client = new Client();
 
-        $response = $client->request('POST', $url, [
+        $response = $client->post( $url, [
             "headers" => [
                 "Authorization" => $authHeader,
                 'Content-Type' => 'application/json',
