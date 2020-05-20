@@ -33,9 +33,6 @@ print_r("\n");
 echo $access_token["access_token"];
 
 print_r("\n");
-echo "Refresh Token";
-print_r("\n");
-echo $access_token["refresh_token"];
 
 $resourceOwner = $provider->getUserInfo($access_token["access_token"]);
 
@@ -44,12 +41,4 @@ echo "User info";
 print_r("\n");
 echo json_encode($resourceOwner);
 
-$refresh_token = $provider->getAccessToken('refresh_token', [
-    'refresh_token' => trim($access_token["refresh_token"]),
-]);
-
-print_r("\n");
-echo "Token From Access Token";
-print_r("\n");
-echo $refresh_token["access_token"];
 print_r("\n");

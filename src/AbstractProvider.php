@@ -115,19 +115,7 @@ class AbstractProvider
                 'code' => $options['code'],
             ];
 
-        } else if ($grant == 'refresh_token') {
-            if (empty($options['refresh_token'])) {
-                throw new \RuntimeException('refresh_token must not be empty in refresh_token flow');
-            }
-
-            $params = [
-                'client_id' => $this->client_id,
-                'client_secret' => $this->client_secret,
-                'grant_type' => 'refresh_token',
-                'refresh_token' => $options['refresh_token'],
-            ];
-
-        } else if ($grant == 'client_credentials') {
+        }  else if ($grant == 'client_credentials') {
 
             $params = [
                 'client_id' => $this->client_id,
