@@ -105,35 +105,10 @@ echo "User info";
 print_r("\n");
 echo json_encode($resourceOwner);
 
-$refresh_token = $provider->getAccessToken('refresh_token', [
-    'refresh_token' => trim($access_token["refresh_token"]),
-]);
-
-print_r("\n");
-echo "Token From Access Token";
-print_r("\n");
-echo $refresh_token["access_token"];
-print_r("\n");
-
 
 
 ```
 
-### Refreshing a Token
-
-```php
-
-$refresh_token = $provider->getAccessToken('refresh_token', [
-    'refresh_token' => trim($access_token["refresh_token"]),
-]);
-
-print_r("\n");
-echo "Token From Access Token";
-print_r("\n");
-echo $refresh_token["access_token"];
-print_r("\n");
-
-```
 
 ### Client Credentials Flow
 
